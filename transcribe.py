@@ -186,7 +186,7 @@ if __name__ == '__main__':
     parser.add_argument('--beam_size', '-b', type=int, default=5, help='Beam size for the model')
     parser.add_argument('--model_size', '-z', choices=['tiny', 'tiny.en', 'base', 'base.en', 'small', 'small.en', 'medium', 'medium.en', 'large-v1', 'large-v2'], default='large-v2', help='Size of the model to use')
     parser.add_argument('--device_type', '-d', choices=['auto', 'cuda', 'cpu'], default='cuda', help='Device type for the model')
-    parser.add_argument('--device_index', '-x', type=int, default=1, help='Device index for the model')
+    parser.add_argument('--device_index', '-x', type=int, default=0, help='Device index for the model')
     parser.add_argument('--compute_type', '-c', choices=['default', 'float16', 'int8_float16', 'int8'], default='float16', help='Compute type for the model')
     parser.add_argument('--cpu_threads', '-t', type=int, default=os.cpu_count(), help='Number of CPU threads')
     parser.add_argument('--language', '-l', choices=["auto", "en", "zh", "ja", "fr", "de"], default='en', help='Language for the model')
