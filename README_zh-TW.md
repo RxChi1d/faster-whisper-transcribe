@@ -1,41 +1,41 @@
 
-# Whisper Transcription Project
+# Whisper 語音轉錄專案
 
-This repository contains tools and scripts for audio transcription using the Whisper ASR system.
+此存儲庫包含使用 Whisper ASR 系統進行音頻轉錄的工具和腳本。
 
-## Contents
+## 內容
 
-- `faster_whisper_transcribe.py`: Main script for transcribing audio using Whisper.
-- `requirements.txt`: List of required Python packages for this project.
+- `faster_whisper_transcribe.py`: 使用 Whisper 進行音頻轉錄的主腳本。
+- `requirements.txt`: 本項目所需的 Python 軟件包列表。
 
-## Dependencies
+## 依賴項
 
-- GPU execution requires the NVIDIA libraries cuBLAS 11.x and cuDNN 8.x to be installed on the system. Please refer to the [CTranslate2 documentation](https://opennmt.net/CTranslate2/installation.html). Alternatively, you can use `conda install cudatoolkit=11.8 cudnn` to install the required libraries. You can also install the required libraries using the following command:
+- GPU 執行需要在系統上安裝 NVIDIA 庫 cuBLAS 11.x 和 cuDNN 8.x。請參閱 [CTranslate2 文檔](https://opennmt.net/CTranslate2/installation.html)。或者，您可以使用 `conda install cudatoolkit=11.8 cudnn` 來安裝所需的庫。您也可以使用以下命令安裝所需的庫：
 ```
 conda install cudatoolkit=11.8 cudnn
 ```
 
-## Installation
+## 安裝
 
-1. Clone this repository:
+1. 克隆此存儲庫：
 
 ```bash
 git clone https://github.com/RxChi1d/faster-whisper-transcribe.git
 cd faster-whisper-transcribe
 ```
 
-2. Install the required packages:
+2. 安裝所需的軟件包：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+## 使用方法
 
-To transcribe audio using the `faster_whisper_transcribe.py` script, run:
+要使用 `faster_whisper_transcribe.py` 腳本進行音頻轉錄，運行：
 
 ```bash
-python faster_whisper_transcribe.py <OPTIONS>
+python faster_whisper_transcribe.py <選項>
 ```
 
 
@@ -58,8 +58,8 @@ python faster_whisper_transcribe.py <OPTIONS>
 - `--max_gap_ms_between_two_sentence`: Maximum gap in ms between two sentences. Default: 200.
 
 
-## References
+## 參考資料
 
-- This project uses the [faster-whisper](https://github.com/guillaumekln/faster-whisper) repository for efficient Whisper ASR execution.
-- For automatic translation of transcriptions, this project references the [autotranslate](https://github.com/lewangdev/autotranslate) repository.
+- 此項目使用 [faster-whisper](https://github.com/guillaumekln/faster-whisper) 存儲庫進行高效的 Whisper ASR 執行。
+- 對於自動翻譯轉錄，此項目引用了 [autotranslate](https://github.com/lewangdev/autotranslate) 存儲庫。
 
