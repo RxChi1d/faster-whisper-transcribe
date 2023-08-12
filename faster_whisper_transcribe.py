@@ -2,7 +2,30 @@ import os
 from faster_whisper import WhisperModel
 import subprocess
 import argparse
+import ast
 
+
+def str2bool(v):
+    """Converts string representation of bool into bool type."""
+    return ast.literal_eval(str(v).capitalize())
+
+
+def classify_file_by_ffmpeg(filepath):
+    try:
+        # Use ffmpeg to get file information
+        result = subprocess.run(["ffmpeg", "-i", filepath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        # If ffmpeg processes it without errors, we classify based on the output
+        output = result.stderr.lower()
+        if "video:" in output:
+            return "video"
+        elif "audio:" in output:
+            return "audio"
+        else:
+            return "other"
+    except Exception as e:
+        return "other"
+    
 
 # Extract the audio from mkv file by ffmpeg
 def extract_audio(video_path, audio_path=None):
@@ -124,10 +147,15 @@ def merge_video_subtitle(video_path, srt_path, output_path=None, lang='English')
         output_path = os.path.splitext(video_path)[0] + '_merged.mkv'
 
     lang_map = {
-        'English': 'eng',
-        'zh-TW': 'cht'
+        'en': ('English', 'eng'),
+        'zh': ('zh-TW', 'cht'),
+        'ja': ('Japanese', 'jpn'),
+        'fr': ('French', 'fre'),
+        'de': ('German', 'ger')
     }
-
+    
+    ffmpeg_language, ffmpeg_title = lang_map[lang]
+    
     command = [
         "ffmpeg",
         "-y",
@@ -138,8 +166,8 @@ def merge_video_subtitle(video_path, srt_path, output_path=None, lang='English')
         "-c:s", "srt",
         "-map", "0",
         "-map", "1",
-        "-metadata:s:s:0", f"language={lang_map[lang]}",
-        "-metadata:s:s:0", f"title={lang}",
+        "-metadata:s:s:0", f"language={ffmpeg_language}",
+        "-metadata:s:s:0", f"title={ffmpeg_title}",
         "-disposition:s:s:0", "default",
         output_path
     ]
@@ -152,27 +180,28 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Whisper WebUI Parameters")
 
     # Add arguments
-    parser.add_argument('--video_path', help='Path to the .mkv video file')
-    parser.add_argument('--output_path', default=None, help='Path for the output')
-    parser.add_argument('--merge_srt', action='store_true', default=True, help='Flag to merge SRT with video')
-    parser.add_argument('--beam_size', type=int, default=5, help='Beam size for the model')
-    parser.add_argument('--model_size', choices=['tiny', 'tiny.en', 'base', 'base.en', 'small', 'small.en', 'medium', 'medium.en', 'large-v1', 'large-v2'], default='large-v2', help='Size of the model to use')
-    parser.add_argument('--device_type', choices=['auto', 'cuda', 'cpu'], default='cuda', help='Device type for the model')
-    parser.add_argument('--device_index', type=int, default=1, help='Device index for the model')
-    parser.add_argument('--compute_type', choices=['default', 'float16', 'int8_float16', 'int8'], default='float16', help='Compute type for the model')
-    parser.add_argument('--cpu_threads', type=int, default=os.cpu_count(), help='Number of CPU threads')
-    parser.add_argument('--language', choices=["auto", "en", "zh", "ja", "fr", "de"], default='en', help='Language for the model')
-    parser.add_argument('--word_level_timestamps', action='store_true', default=False, help='Flag for word level timestamps')
-    parser.add_argument('--vad_filter', action='store_true', default=True, help='Flag for VAD filter')
-    parser.add_argument('--vad_filter_min_silence_duration_ms', type=int, default=50, help='Minimum silence duration in ms for VAD filter')
-    parser.add_argument('--verbose', action='store_true', default=True, help='Flag for verbose mode')
-    parser.add_argument('--max_gap_ms_between_two_sentence', type=int, default=200, help='Maximum gap in ms between two sentences')
-
+    parser.add_argument('--input_path', '-i', help='Path to the input video file or audio file', required=True)
+    parser.add_argument('--output_path', '-o', default=None, help='Path for the output')
+    parser.add_argument('--merge_srt', '-s', type=str2bool, default=True, help='Flag to merge SRT with video')
+    parser.add_argument('--beam_size', '-b', type=int, default=5, help='Beam size for the model')
+    parser.add_argument('--model_size', '-z', choices=['tiny', 'tiny.en', 'base', 'base.en', 'small', 'small.en', 'medium', 'medium.en', 'large-v1', 'large-v2'], default='large-v2', help='Size of the model to use')
+    parser.add_argument('--device_type', '-d', choices=['auto', 'cuda', 'cpu'], default='cuda', help='Device type for the model')
+    parser.add_argument('--device_index', '-x', type=int, default=1, help='Device index for the model')
+    parser.add_argument('--compute_type', '-c', choices=['default', 'float16', 'int8_float16', 'int8'], default='float16', help='Compute type for the model')
+    parser.add_argument('--cpu_threads', '-t', type=int, default=os.cpu_count(), help='Number of CPU threads')
+    parser.add_argument('--language', '-l', choices=["auto", "en", "zh", "ja", "fr", "de"], default='en', help='Language for the model')
+    parser.add_argument('--word_level_timestamps', '-w', type=str2bool, default=False, help='Flag for word level timestamps')
+    parser.add_argument('--vad_filter', '-f', type=str2bool, default=True, help='Flag for VAD filter')
+    parser.add_argument('--vad_filter_min_silence_duration_ms', '-g', type=int, default=50, help='Minimum silence duration in ms for VAD filter')
+    parser.add_argument('--verbose', '-v', type=str2bool, default=True, help='Flag for verbose mode')
+    parser.add_argument('--max_gap_ms_between_two_sentence', '-mg', type=int, default=200, help='Maximum gap in ms between two sentences')
+    parser.add_argument('--max_length', '-ml', type=int, default=35, help='Maximum length of a sentence')
+    
     # Parse the arguments
     args = parser.parse_args()
     
     # Assign argparse values to the original variable names
-    video_path = args.video_path
+    input_path = args.input_path
     output_path = args.output_path
     merge_srt = args.merge_srt
     beam_size = args.beam_size
@@ -187,23 +216,40 @@ if __name__ == '__main__':
     vad_filter_min_silence_duration_ms = args.vad_filter_min_silence_duration_ms
     verbose = args.verbose
     max_gap_ms_between_two_sentence = args.max_gap_ms_between_two_sentence
+    max_length = args.max_length
 
-    audio_path = extract_audio(video_path)
-    print(audio_path)
-    fragments = detect_subtitle(audio_path, beam_size=beam_size, model_size=model_size, device_type=device_type, device_index=device_index, compute_type=compute_type, cpu_threads=cpu_threads, language=language, word_level_timestamps=word_level_timestamps, vad_filter=vad_filter, vad_filter_min_silence_duration_ms=vad_filter_min_silence_duration_ms, verbose=verbose)
+    # detect the file type is video or audio
+    file_type = classify_file_by_ffmpeg(input_path)
+    
+    if file_type == "video":
+        audio_path = extract_audio(input_path)
+    elif file_type == "audio":
+        audio_path = input_path
+    else:
+        raise ValueError("Unsupported file type")
+    
+    
+    fragments = detect_subtitle(audio_path, beam_size=beam_size, model_size=model_size,
+                                device_type=device_type, device_index=device_index, 
+                                compute_type=compute_type, cpu_threads=cpu_threads, 
+                                language=language, word_level_timestamps=word_level_timestamps, 
+                                vad_filter=vad_filter, 
+                                vad_filter_min_silence_duration_ms=vad_filter_min_silence_duration_ms,
+                                verbose=verbose)
 
     new_fragments = merge_fragments(
-        fragments, max_gap_ms_between_two_sentence/1000.0, max_length=35)
-
-    # remove the audio file
-    os.remove(audio_path)
+        fragments, max_gap_ms_between_two_sentence/1000.0, max_length=max_length)
 
     # Get the srt path
-    srt_path = os.path.splitext(video_path)[0] + ".srt"
-    print(srt_path)
+    srt_path = os.path.splitext(input_path)[0] + ".srt"
+
     # Export the srt file
     export_srt(new_fragments, srt_path)
 
-    if merge_srt:
-        # Merge the video and srt file
-        merge_video_subtitle(video_path, srt_path, output_path=None, lang='English')
+    if file_type == "video":
+        # remove the audio file
+        os.remove(audio_path)
+        
+        if merge_srt:
+            # Merge the video and srt file
+            merge_video_subtitle(input_path, srt_path, output_path=output_path, lang=language)
